@@ -1,9 +1,12 @@
 import pickle
 import streamlit as st
 import requests
+import os
 
+# --- Fetch poster from TMDb API ---
 def fetch_poster(movie_id):
-    url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key=3aa4cfbcc2bebae159eb65ff50d64b26&language=en-US"
+    api_key = st.secrets["tmdb_api_key"]
+    url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key={api_key}&language=en-US"
     try:
         response = requests.get(url, timeout=5)
         response.raise_for_status()
@@ -16,6 +19,19 @@ def fetch_poster(movie_id):
         print(f"[ERROR] Could not fetch poster for movie ID {movie_id}: {e}")
         return "https://via.placeholder.com/500x750?text=No+Image"
 
+# --- Download large pickle from Google Drive ---
+@st.cache_data(show_spinner="Downloading data...", max_entries=2)
+def download_pickle_from_gdrive(file_id, filename):
+    url = f"https://drive.google.com/uc?export=download&id={file_id}"
+    if not os.path.exists(filename):
+        r = requests.get(url)
+        r.raise_for_status()
+        with open(filename, 'wb') as f:
+            f.write(r.content)
+    with open(filename, 'rb') as f:
+        return pickle.load(f)
+
+# --- Recommend movies ---
 def recommend(movie):
     index = movies[movies['title'] == movie].index[0]
     distances = sorted(list(enumerate(similarity[index])), reverse=True, key=lambda x: x[1])
@@ -27,13 +43,19 @@ def recommend(movie):
         recommended_movie_names.append(movies.iloc[i[0]].title)
     return recommended_movie_names, recommended_movie_posters
 
+# --- File IDs for large files hosted externally ---
+SIMILARITY_FILE_ID = "102huNjyF6_IIhDuR3HxX-oNsbFb6j9Y_"  # from Google Drive
+
+# --- Load small files from GitHub repo ---
+with open('artifacts/movie_list.pkl', 'rb') as f:
+    movies = pickle.load(f)
+
+# --- Load large similarity file from Google Drive ---
+similarity = download_pickle_from_gdrive(SIMILARITY_FILE_ID, 'similarity.pkl')
+
+# --- Streamlit UI ---
 st.header('🎬 Movie Recommender System')
 
-# Load data
-movies = pickle.load(open('artifacts/movie_list.pkl', 'rb'))
-similarity = pickle.load(open('artifacts/similarity.pkl', 'rb'))
-
-# UI
 movie_list = movies['title'].values
 selected_movie = st.selectbox("Type or select a movie from the dropdown", movie_list)
 
