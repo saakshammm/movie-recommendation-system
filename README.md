@@ -45,12 +45,6 @@ streamlit run app.py
 
 Then open the provided URL (usually http://localhost:8501) in your browser.
 
-## 📁 Files Overview
-
-app.py - Streamlit app file
-recommendation-system.ipynb -	Jupyter notebook with filtering logic
-Dataset: movie titles, genres, ratings
-requirements.txt - Python dependencies
 
 ## 🚀 Future Improvements
 	•	Add content-based filtering (genre, description similarity)
