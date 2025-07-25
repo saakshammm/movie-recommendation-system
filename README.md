@@ -58,6 +58,6 @@ requirements.txt - Python dependencies
 	•	Add user ratings input to personalize results
 	•	Include movie posters and metadata from TMDB API
 
-👤 Author
+## 👤 Author
 
 Saksham Kumar
